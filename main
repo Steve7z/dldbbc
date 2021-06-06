@@ -1,0 +1,73 @@
+import urllib.request as ur
+import re
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+# https时需要的ssl协议
+
+def get_name():
+    name_url = 'https://www.bbc.co.uk/learningenglish/english/features/6-minute-english'
+    name_headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15'}
+    n_req = ur.Request(name_url, headers=name_headers)
+    n_res = ur.urlopen(n_req)
+    n_html = n_res.read().decode('utf-8')
+    n_find = re.findall(r'href="/learningenglish/english/features/6-minute-english/ep-\d{6}">.{9,30}</a>', n_html)
+    date_list = []
+    num = 0
+    for i in n_find:
+        num += 1
+        date = re.search(r'\d{6}', i)
+        name = i[i.find('>')+1 : i.find('<')]
+        # 切片内容
+        date_list.append(date.group())
+        print(num, ':', date.group(), name)
+        # group返回匹配结果
+    return date_list
+
+def get_transcript():
+    a = html.find('Transcript')
+    # 返回索引
+    b = html.find('</div>', a)
+    transcript = html[a:b]
+    # a-b之间所有内容
+    with open('/Users/zeng/Downloads/%sTranscript.html' % (date), 'w') as f:
+        f.write(transcript)
+    print('Transcript Success.')
+
+def get_mp3():
+    a = html.find('<a class="download bbcle-download-extension-mp3"')
+    b = html.find('.mp3', a, a+255)
+    # <a class="download bbcle-download-extension-mp3" href="http://downloads.bbc.co.uk/learningenglish/features/6min/210225_6min_english_one_year_on_covid_download
+    mp3_url = html[a+55:b] + '.mp3'
+    mp3_name = html[a+112:b] + '.mp3'
+    with open('/Users/zeng/Downloads/%s' % (mp3_name), 'wb') as f:
+        mp3_req = ur.Request(mp3_url, headers=headers)
+        mp3_res = ur.urlopen(mp3_req)
+        mp3 = mp3_res.read()
+        f.write(mp3)
+    print('Download Success.')
+
+# 主函数
+
+date_list = get_name()
+# 对象化函数的return
+
+p = True
+while p == True: # 判断输入为数字
+    try:
+        date = input('输入下载序号：') # 这是一个str
+        date = date_list[int(date)-1]
+        p = False # 终止循环
+    except:
+        print('无效输入！请输入数字序号！')
+        p = True# 继续循环
+url = 'https://www.bbc.co.uk/learningenglish/english/features/6-minute-english/ep-' + str(date)
+headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15'}
+req = ur.Request(url, headers=headers)
+res = ur.urlopen(req)
+html = res.read().decode('utf-8')
+print(url)
+
+print('Downloading Transcript...')
+get_transcript()
+print('Downloading mp3 file...')
+get_mp3()
